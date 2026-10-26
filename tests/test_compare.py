@@ -70,6 +70,12 @@ class CompareTests(unittest.TestCase):
                                      "I led the API and helped build the frontend.")
         self.assertFalse(missing)
 
+    def test_reports_strengthened_certainty(self):
+        report, missing = compare.compare("The cache could reduce retries.",
+                                          "The cache will eliminate retries.")
+        self.assertTrue(missing)
+        self.assertIn("'could'", "\n".join(report))
+
     def test_reports_dropped_v_prefixed_version(self):
         report, missing = compare.compare("Upgraded the SDK to v2.4.", "Upgraded the SDK.")
         self.assertTrue(missing)
