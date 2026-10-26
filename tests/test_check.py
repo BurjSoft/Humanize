@@ -73,6 +73,20 @@ class CheckTests(unittest.TestCase):
             )
             self.assertNotIn("FEFF", piped.stdout)
 
+    def test_flags_published_detector_patterns(self):
+        text = ("Experts agree this serves as a model. Featured in Forbes and trusted by leading "
+                "brands. Results may vary.")
+        report = "\n".join(checker.check(text))
+        self.assertIn("vague authority", report)
+        self.assertIn("dressed-up verbs", report)
+        self.assertIn("name dropping", report)
+        self.assertIn("unnecessary caveats", report)
+
+    def test_plain_project_facts_are_not_name_dropping(self):
+        report = "\n".join(checker.check("I built the Stripe billing flow for a telecom platform."))
+        self.assertNotIn("name dropping", report)
+        self.assertNotIn("vague authority", report)
+
     def test_plain_links_and_brackets_are_not_residue(self):
         report = "\n".join(checker.check("See [the docs](https://example.com/?page=2) for setup."))
         self.assertNotIn("placeholders", report)

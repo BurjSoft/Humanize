@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Optional mechanical sweep for the humanize skill. Python 3.8+, stdlib only.
+"""Optional mechanical sweep for the humanize skill. Python 3.10+, stdlib only.
 
 Usage: python check.py <file>    (or - to read stdin)
 
@@ -41,6 +41,14 @@ INVISIBLE = re.compile("[​‌‍⁠﻿]")
 LOOKALIKE = re.compile("[Ѐ-ӿͰ-Ͽ]")
 INFLATED = ["utilize", "facilitate", "commence", "endeavor", "ascertain", "in order to",
             "due to the fact that", "has the ability to", "at this point in time"]
+DRESSED_UP = re.compile(r"\b(serves|served|stands|stood|functions) as an?\b|\bboasts\b", re.I)
+VAGUE_AUTHORITY = re.compile(r"\b(experts|researchers|analysts|studies|research) "
+                             r"(agree|argue|say|says|suggest|suggests|show|shows|believe)\b"
+                             r"|\bit is widely (recognized|accepted|known)\b", re.I)
+NAME_DROPPING = re.compile(r"\b(featured in|as seen (in|on)|trusted by (leading|top)"
+                           r"|fortune 500 (companies|clients))\b", re.I)
+CAVEATS = ["results may vary", "every project is different", "no solution is perfect",
+           "it's important to remember", "it is important to remember"]
 PLACEHOLDER = re.compile(r"\[(?:your|insert|add|enter|describe|specify|client|company|name)[^\]]{0,40}\]"
                          r"|\b\d{4}-XX-XX\b", re.I)
 CITATION_LEAK = re.compile(r"cite\s*turn\d+\w*|contentReference\[oaicite:\d+\]|oai_citation"
@@ -76,6 +84,10 @@ def check(text):
                                 for m in re.finditer(p, text, re.I | re.M)])
     flag("filler hedges", [h for h in HEDGES if h in low])
     flag("inflated verbs / filler phrases", [w for w in INFLATED if re.search(r"\b" + w, low)])
+    flag("dressed-up verbs", [m.group(0) for m in DRESSED_UP.finditer(text)])
+    flag("vague authority", [m.group(0) for m in VAGUE_AUTHORITY.finditer(text)])
+    flag("name dropping", [m.group(0) for m in NAME_DROPPING.finditer(text)])
+    flag("unnecessary caveats", [c for c in CAVEATS if c in low])
     flag("unfilled placeholders", PLACEHOLDER.findall(text))
     flag("chat citation leaks", CITATION_LEAK.findall(text))
     flag("AI referrer URL parameters", AI_REFERRER.findall(text))

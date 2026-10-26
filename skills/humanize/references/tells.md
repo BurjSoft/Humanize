@@ -31,6 +31,13 @@ This means that / In other words / What this shows is / Notice how / As you can 
 ## Possible filler hedges (preserve meaningful uncertainty)
 arguably, it's worth noting, it's important to note, it could potentially, may eventually, to some extent, in many ways
 
+Unnecessary caveats: results may vary, every project is different, of course this depends on your needs, it's important to remember that, while no solution is perfect. Keep a caveat that changes what the reader should expect or do.
+
+## Vague authority and name dropping
+experts agree / argue / say, studies show, research suggests, industry leaders, many companies, it is widely recognized. Name the source the user gave or cut the attribution.
+
+Name dropping: "featured in Forbes, Wired and BBC", "worked with Fortune 500 companies like Google, Amazon and Microsoft", "trusted by leading brands". In a proposal, one relevant, verified project beats a list of famous names. Never name a client, employer or outlet the user has not confirmed.
+
 ## Constructions nobody says out loud
 serves as (use "is"), boasts / features (use "has"), the recommended approach is X (use "do X"), perform an evaluation of (use "evaluate"), posits / contends / asserts (use "says")
 

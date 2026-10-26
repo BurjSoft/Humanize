@@ -61,13 +61,15 @@ Ordinary cleanup preserves clear passages, useful structure and exact quotations
 
 It runs no AI detector and produces no score. Detector results are advisory; never trade accuracy for a score or promise undetectability. It refuses detector-evasion tricks such as homoglyphs, zero-width characters and planted typos.
 
-The optional sweep counts dashes, semicolons, stock vocabulary, career clichés, staging phrases, sentence-length uniformity and invisible characters. Unicode warnings include character names and code points for review; legitimate language, typography and emoji must be preserved. It flags, never rewrites, and needs only Python 3.8+:
+The [detector review guidance](skills/humanize/references/detector-review.md) explains how to interpret a supplied GPTZero result, including classification confidence, short-text limits and privacy. It draws on official news, support and API documentation; no detector integration or scan is included.
+
+The optional sweep counts dashes, semicolons, stock vocabulary, career clichés, staging phrases, sentence-length uniformity and invisible characters. Unicode warnings include character names and code points for review; legitimate language, typography and emoji must be preserved. It flags, never rewrites, and needs only Python 3.10+:
 
 ```text
 python skills/humanize/scripts/check.py draft.md
 ```
 
-Two more optional checks, also Python 3.8+ with no dependencies:
+Two more optional checks, also Python 3.10+ with no dependencies:
 
 ```text
 python skills/humanize/scripts/compare.py original.md rewrite.md

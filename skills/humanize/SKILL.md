@@ -10,9 +10,11 @@ Make writing sound like a specific, experienced person wrote it for a specific r
 
 Reader response and factual truth come before any AI-detector score. The skill is instruction-only; the bundled scripts (`check.py`, `compare.py`, `preview.py`) are optional, stdlib-only aids that flag patterns and never rewrite or score authorship. Never promise undetectability, and never claim a detector ran unless one actually returned results in this session.
 
+Humanizing improves readability; it does not change authorship. Where a client, school, employer or platform requires disclosure of AI assistance, or forbids it, keep that disclosure and do not use this skill to hide AI use. If the user asks for help concealing required disclosure, say so plainly and offer the editorial help that remains legitimate.
+
 Three working assumptions shape the workflow:
 1. **Readers notice texture.** Emphasis with no information in it, uniform rhythm, generic claims and sentences that explain what the reader already understood. These are fixable by editing.
-2. **Rewording does not change who composed a piece.** Detectors and careful readers respond to structure and reasoning, not just vocabulary. The most human result comes from the writer's own material: their facts, their order, their reasons. When that material is missing, ask for it (see Gather mode) rather than polishing a hollow draft.
+2. **Rewording does not establish human authorship.** A detector result cannot establish who composed a piece or whether its claims are true. Build on the writer's own material: their facts, their order, their reasons. When that material is missing, ask for it (see Gather mode) rather than polishing a hollow draft.
 3. **Specifics carry the human signal, and only real ones count.** Numbers, names, dates and concrete decisions make text credible. A fabricated specific is worse than the vague phrase it replaced.
 
 ## Source of truth
@@ -36,8 +38,8 @@ Three working assumptions shape the workflow:
 4. **Scan for tells**, strongest first (full list in `references/tells.md`):
    - Staging: contrasts with a claim nobody made ("It's not X, it's Y"), pause-and-point lines ("Here's the thing:", "The best part:"), colon reveals, counts announced before lists, restating closers, aphorisms, fragment stacks ("No setup. No config. Just results.").
    - Doing the reader's work: "This means that...", trailing "-ing" riders (", highlighting our commitment to..."), pointing ("As you can see"), telling the reader how to feel.
-   - Inflation: adjectives with no specific behind them, significance claims ("a testament to"), marketing register outside marketing, vague authority ("experts agree").
-   - Misplaced hedges: hedge stacks on facts, opinions at full strength, filler hedges ("it's worth noting").
+   - Inflation: adjectives with no specific behind them, significance claims ("a testament to"), marketing register outside marketing, vague authority ("experts agree"), name dropping (a pile of famous clients, companies or outlets offered as credibility instead of one relevant, verified piece of work).
+   - Misplaced hedges: hedge stacks on facts, opinions at full strength, filler hedges ("it's worth noting"), caveats the reader already knows ("results may vary", "every project is different").
    - Rhythm by rule: sentences clustered in one length band, repeated openers, reflex triads, filler transitions (Moreover, Additionally), synonym cycling for the same thing.
    - Polish: every paragraph ending on a quotable kicker, tidy callbacks to the opening, announced caveats ("one honest caveat"), narrated candor ("in the interest of full disclosure").
    - Formatting and residue: em dashes as a default connector, dashes rerouted into semicolons, bold-label paragraph starts, emoji bullets, Title Case Headings in prose, chat residue ("Great question!", "I hope this helps").
@@ -61,7 +63,9 @@ These are rewrite failures even when the result reads better:
 - New dashes or semicolons in place of removed ones.
 
 ## Voice
+- Treat tone and rewrite depth separately. "Warmer", "professional" or "more confident" changes expression, not the amount of restructuring authorized. Keep uncertainty that limits a claim: "could reduce retries" must not become "will eliminate retries". Change structure or length substantially only when requested.
 - If the user provides samples of their own writing, match those first: typical sentence length, contraction use, punctuation habits (including whether they use dashes), how they open and close, and recurring phrasing. The sample overrides these defaults. Take only style from a sample, never its facts, projects or opinions, and match a plausible spread of sentence lengths rather than making every sentence the sample's average.
+- Prefer samples from the same kind of writing. A casual message is weak evidence for a resume's register; use only compatible style traits. A short sample is still useful but does not establish a stable voice profile or justify asking for a fixed word count.
 - Otherwise: professional, direct, slightly conversational, confident without boasting. Contractions by default except in formal documents. The speaker talks as themselves ("I'll set up the pipeline", not "The pipeline will be set up"). Everyday verbs (use, build, fix, ship) over utilize, facilitate, ensure.
 - Conversational, not colloquial: at most one idiom per paragraph. At most one crafted, quotable line per piece; zero is fine.
 - Keep what is already human: specific details, unusual word choices, real opinions, doubt, a slightly clunky but accurate sentence.
@@ -107,6 +111,8 @@ Avoid unless accurate or quoted from the user: "delve", "seamless", "cutting-edg
 - Shorter option: cover each paragraph and ask whether the reader would miss a fact, commitment or decision. If the removable parts add up to about a quarter of a piece over 100 words, offer that cut in one line after the text and let the user decide. Never offer to cut the proof, the numbers or a required disclosure.
 
 ## Limitations
+When interpreting a supplied detector result or planning an explicitly requested detector evaluation, read [detector review guidance](references/detector-review.md). Keep the provider's class, confidence and document scope separate from writing quality. A sentence highlight is not proof of authorship. Never convert our pattern counts into GPTZero probabilities, and never rewrite punctuation or force sentence-length variation to target a detector. Retain useful headings, ATS structure and concise answers even when flagged.
+
 English phrase lists are not universal rules for other languages. Sentence-length spread, lexical diversity and punctuation counts describe style, not authorship probabilities. Do not apply blog-derived thresholds to resumes or short screening answers. The optional checker scans raw text, including quotations and code; review context before acting on a flag. Greek letters and joiners can be legitimate language or technical content. Never send private drafts to an external detector, paraphraser or rewriting service without the user's authorization.
 
-No heuristic or commercial detector reliably proves human authorship, and detectors have shown high false-positive rates on non-native English writers. Detector results, if a real one is run, are advisory: review false positives, and never trade credibility for a score.
+No heuristic or commercial detector reliably proves human authorship, and detectors have shown high false-positive rates on non-native English writers. Commercial detectors classify whole documents with trained models, not word lists, and their vendors say results are less reliable on short text, which includes most proposals and screening answers. Heavy AI editing of a person's own draft can still be classified as AI-polished or mixed, so prefer the smallest edit that solves a real problem. Vendor accuracy figures are self-reported or vendor-selected benchmarks. Detector results, if a real one is run, are advisory: review false positives, and never trade credibility for a score.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upwork preview check for the humanize skill. Python 3.8+, stdlib only.
+"""Upwork preview check for the humanize skill. Python 3.10+, stdlib only.
 
 Usage: python preview.py <proposal> [--job <job post file>]
 
@@ -43,7 +43,8 @@ def job_terms(job):
     seen, terms = set(), []
     for t in tokens:
         key = t.lower()
-        if key in STOP or len(key) < 3 or key in seen:
+        # Keep short acronyms (AI, UI, QA) but not short ordinary words.
+        if key in STOP or key in seen or (len(key) < 3 and not t.isupper()):
             continue
         seen.add(key)
         terms.append(t)

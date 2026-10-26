@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Before/after fact check for the humanize skill. Python 3.8+, stdlib only.
+"""Before/after fact check for the humanize skill. Python 3.10+, stdlib only.
 
-Usage: python compare.py <original> <rewrite>    (either may be - for stdin)
+Usage: python compare.py <original> <rewrite>    (one of them may be - for stdin)
 
 Lists facts that appear in the original but not in the rewrite (numbers,
 versions, dates, URLs, emails, technology and project names, quoted text,
@@ -14,7 +14,7 @@ import re
 import sys
 from collections import Counter
 
-NUMBER = re.compile(r"(?<![\w.])[$£€]?\d[\d,]*(?:\.\d+)*(?:%|k|K|m|M|x|\+)?(?![\w])")
+NUMBER = re.compile(r"(?<![\w.])(?:[vV](?=\d))?[$£€]?\d[\d,]*(?:\.\d+)*(?:%|k|K|m|M|x|\+)?(?![\w])")
 URL = re.compile(r"https?://[^\s)>\]]+")
 EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b")
 # Words with internal capitals, dots or digits, or all caps: Node.js, PostgreSQL, AWS, S3, MotoMate123.

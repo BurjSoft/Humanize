@@ -64,6 +64,11 @@ class CompareTests(unittest.TestCase):
                 self.assertTrue(missing)
                 self.assertIn("  " + fact, report)
 
+    def test_reports_dropped_v_prefixed_version(self):
+        report, missing = compare.compare("Upgraded the SDK to v2.4.", "Upgraded the SDK.")
+        self.assertTrue(missing)
+        self.assertIn("  number: v2.4", report)
+
     def test_number_formatting_and_moved_name_are_preserved(self):
         _, missing = compare.compare("I use React for 1,000 forms.",
                                      "React powers 1000 forms.")
@@ -109,6 +114,12 @@ class PreviewTests(unittest.TestCase):
         self.assertNotIn("opening tells", report)
         self.assertIn("70%", report)
         self.assertIn("handoff", report)
+
+    def test_short_acronyms_count_as_job_terms(self):
+        report = "\n".join(preview.preview("I build AI and UI features.",
+                                           "Need AI chatbot and UI work, QA too."))
+        self.assertIn("'AI'", report)
+        self.assertIn("'UI'", report)
 
     def test_preview_is_cut_at_a_word_boundary(self):
         text = "word " * 100
