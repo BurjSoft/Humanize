@@ -17,7 +17,9 @@ Humanize/
   skills/humanize/scripts/check.py Optional stdlib-only pattern sweep
   skills/humanize/scripts/compare.py Optional before/after fact check
   skills/humanize/scripts/preview.py Optional Upwork preview check
-  tests/                          Script and manifest tests (python -m unittest)
+  tests/                          Script and manifest tests (python -m unittest discover -s tests)
+  evals/editorial-cases.md        Manual editorial evaluation cases
+  docs/repository-review.md       Notes on reviewed repositories and services
   AGENTS.md                       Optional mandatory-use rule
   LICENSE
 ```
@@ -61,7 +63,7 @@ Ordinary cleanup preserves clear passages, useful structure and exact quotations
 
 It runs no AI detector and produces no score. Detector results are advisory. Never trade accuracy for a score or promise undetectability. It refuses detector-evasion tricks such as homoglyphs, zero-width characters and planted typos.
 
-The [detector review guidance](skills/humanize/references/detector-review.md) explains how to interpret a supplied GPTZero result, including classification confidence, short-text limits and privacy. It draws on official news, support and API documentation. No detector integration or scan is included.
+The [detector review guidance](skills/humanize/references/detector-review.md) explains how to interpret a supplied GPTZero or Originality.ai result, including each provider's score scale, short-text limits and privacy. It draws on the providers' own announcements, support and API documentation. No detector integration or scan is included.
 
 The optional sweep counts dashes, semicolons, stock vocabulary, career clichés, staging phrases, sentence-length uniformity and invisible characters. Unicode warnings include character names and code points for review, and legitimate language, typography and emoji must be preserved. It flags, never rewrites, and needs only Python 3.10+:
 
@@ -84,6 +86,6 @@ Pick a mode by asking: rewrite (default), gather (the skill asks up to five shor
 
 ## Credits
 
-Inspired by the editorial approaches of [blader/humanizer](https://github.com/blader/humanizer), [Aboudjem/humanizer-skill](https://github.com/Aboudjem/humanizer-skill), [phuryn/work-humanizer](https://github.com/phuryn/work-humanizer) (fact-and-certainty ledger, interview mode, mechanical sweep), [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) (editing scope, never-inject rules, source-as-data) and [milesoncken/longtail](https://github.com/milesoncken/longtail) (polish tells, cold read) and [lynote-ai/humanize-text-skill](https://github.com/lynote-ai/humanize-text-skill) (false-positive boundaries, "clean but flat" guidance, voice-sample limits). [craigtrim/pystylometry](https://github.com/craigtrim/pystylometry) informed the voice-sample guidance. This is an original workflow, not a copy or port of any of them. They are references, not runtime dependencies.
+Inspired by the editorial approaches of [blader/humanizer](https://github.com/blader/humanizer), [Aboudjem/humanizer-skill](https://github.com/Aboudjem/humanizer-skill), [phuryn/work-humanizer](https://github.com/phuryn/work-humanizer) (fact-and-certainty ledger, interview mode, mechanical sweep), [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) (editing scope, never-inject rules, source-as-data), [milesoncken/longtail](https://github.com/milesoncken/longtail) (polish tells, cold read), and [lynote-ai/humanize-text-skill](https://github.com/lynote-ai/humanize-text-skill) (false-positive boundaries, "clean but flat" guidance, voice-sample limits). [craigtrim/pystylometry](https://github.com/craigtrim/pystylometry) informed the voice-sample guidance. This is an original workflow, not a copy or port of any of them. They are references, not runtime dependencies.
 
 Released under the [MIT License](LICENSE).
