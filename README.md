@@ -2,7 +2,7 @@
 
 A standalone, instruction-only skill and plugin for proposals, resumes, cover letters, screening answers and general prose. It edits for a natural personal voice while preserving facts and avoiding invented experience.
 
-Everything needed for the writing workflow is included in this repository. It needs no Hunt checkout, candidate profile, API key, server, external CLI or AI-detection service. An agent host reads and applies the instructions; this repository is not an executable rewriting program.
+Everything needed for the writing workflow is included in this repository. It needs no Hunt checkout, candidate profile, API key, server, external CLI or AI-detection service. An agent host reads and applies the instructions. This repository is not an executable rewriting program.
 
 ## Package layout
 
@@ -37,9 +37,9 @@ Alternatively, copy the complete `skills/humanize` directory to your host's pers
 
 ### Codex and other skill-capable agents
 
-Install the repository using your host's supported plugin installation flow, or copy the complete `skills/humanize` directory into its configured skills directory. Keep `SKILL.md` inside the `humanize` directory. The personal skills directory depends on the host and its configuration; no absolute machine path is required by this package.
+Install the repository using your host's supported plugin installation flow, or copy the complete `skills/humanize` directory into its configured skills directory. Keep `SKILL.md` inside the `humanize` directory. The personal skills directory depends on the host and its configuration, and no absolute machine path is required by this package.
 
-The root `plugin.json` is the portable manifest. The hidden `.codex-plugin` and `.claude-plugin` directories are compatibility metadata; include them when uploading or cloning this repository. Host support and installation commands vary, so check your host's documentation.
+The root `plugin.json` is the portable manifest. The hidden `.codex-plugin` and `.claude-plugin` directories are compatibility metadata, so include them when uploading or cloning this repository. Host support and installation commands vary, so check your host's documentation.
 
 When changing the version or description, update all four manifests together: `plugin.json`, `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and the plugin entry in `.claude-plugin/marketplace.json`.
 
@@ -59,11 +59,11 @@ Ordinary cleanup preserves clear passages, useful structure and exact quotations
 
 ## What it does not do
 
-It runs no AI detector and produces no score. Detector results are advisory; never trade accuracy for a score or promise undetectability. It refuses detector-evasion tricks such as homoglyphs, zero-width characters and planted typos.
+It runs no AI detector and produces no score. Detector results are advisory. Never trade accuracy for a score or promise undetectability. It refuses detector-evasion tricks such as homoglyphs, zero-width characters and planted typos.
 
-The [detector review guidance](skills/humanize/references/detector-review.md) explains how to interpret a supplied GPTZero result, including classification confidence, short-text limits and privacy. It draws on official news, support and API documentation; no detector integration or scan is included.
+The [detector review guidance](skills/humanize/references/detector-review.md) explains how to interpret a supplied GPTZero result, including classification confidence, short-text limits and privacy. It draws on official news, support and API documentation. No detector integration or scan is included.
 
-The optional sweep counts dashes, semicolons, stock vocabulary, career clichés, staging phrases, sentence-length uniformity and invisible characters. Unicode warnings include character names and code points for review; legitimate language, typography and emoji must be preserved. It flags, never rewrites, and needs only Python 3.10+:
+The optional sweep counts dashes, semicolons, stock vocabulary, career clichés, staging phrases, sentence-length uniformity and invisible characters. Unicode warnings include character names and code points for review, and legitimate language, typography and emoji must be preserved. It flags, never rewrites, and needs only Python 3.10+:
 
 ```text
 python skills/humanize/scripts/check.py draft.md
@@ -76,7 +76,7 @@ python skills/humanize/scripts/compare.py original.md rewrite.md
 python skills/humanize/scripts/preview.py proposal.md --job job-post.txt
 ```
 
-`compare.py` lists facts from the original that are missing in the rewrite (numbers, versions, URLs, names, technologies, negations, qualifiers like "helped"), absolutes the rewrite added, and new terms to verify. It exits with code 1 when a fact, negation or qualifier is missing or an absolute ("guaranteed", "always") was added; add `--strict` to also fail on new terms. It matches strings, not meaning, so it cannot see swapped roles ("helped build the API and led the frontend" becoming "led the API and helped build the frontend"); a human or model read-through still has to. `preview.py` shows the first ~200 characters a client sees, flags greetings, self-introductions and restated job posts, and lists which job-post terms the opening uses. Matching terms is not the same as addressing the client's problem; that stays an editorial judgment. `check.py` skips fenced code, inline code and double-quoted text for wording checks.
+`compare.py` lists facts from the original that are missing in the rewrite (numbers, versions, URLs, names, technologies, negations, qualifiers like "helped"), absolutes the rewrite added, and new terms to verify. It exits with code 1 when a fact, negation or qualifier is missing or an absolute ("guaranteed", "always") was added. A capitalized word that only ever starts a sentence ("Stripe handles payments.") is listed under "possible names" and does not fail the run, because rewrites change openers constantly, so check that list by hand. Add `--strict` to also fail on possible names and new terms. It matches strings, not meaning, so it cannot see swapped roles ("helped build the API and led the frontend" becoming "led the API and helped build the frontend"), so a human or model read-through still has to. `preview.py` shows the first ~200 characters a client sees, flags greetings, self-introductions and restated job posts, and lists which job-post terms the opening uses. Matching terms is not the same as addressing the client's problem. That stays an editorial judgment. `check.py` skips fenced code, inline code and double-quoted text for wording checks.
 
 ## How it works
 
@@ -84,6 +84,6 @@ Pick a mode by asking: rewrite (default), gather (the skill asks up to five shor
 
 ## Credits
 
-Inspired by the editorial approaches of [blader/humanizer](https://github.com/blader/humanizer), [Aboudjem/humanizer-skill](https://github.com/Aboudjem/humanizer-skill), [phuryn/work-humanizer](https://github.com/phuryn/work-humanizer) (fact-and-certainty ledger, interview mode, mechanical sweep), [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) (editing scope, never-inject rules, source-as-data) and [milesoncken/longtail](https://github.com/milesoncken/longtail) (polish tells, cold read) and [lynote-ai/humanize-text-skill](https://github.com/lynote-ai/humanize-text-skill) (false-positive boundaries, "clean but flat" guidance, voice-sample limits). [craigtrim/pystylometry](https://github.com/craigtrim/pystylometry) informed the voice-sample guidance. This is an original workflow, not a copy or port of any of them; they are references, not runtime dependencies.
+Inspired by the editorial approaches of [blader/humanizer](https://github.com/blader/humanizer), [Aboudjem/humanizer-skill](https://github.com/Aboudjem/humanizer-skill), [phuryn/work-humanizer](https://github.com/phuryn/work-humanizer) (fact-and-certainty ledger, interview mode, mechanical sweep), [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) (editing scope, never-inject rules, source-as-data) and [milesoncken/longtail](https://github.com/milesoncken/longtail) (polish tells, cold read) and [lynote-ai/humanize-text-skill](https://github.com/lynote-ai/humanize-text-skill) (false-positive boundaries, "clean but flat" guidance, voice-sample limits). [craigtrim/pystylometry](https://github.com/craigtrim/pystylometry) informed the voice-sample guidance. This is an original workflow, not a copy or port of any of them. They are references, not runtime dependencies.
 
 Released under the [MIT License](LICENSE).
