@@ -87,6 +87,25 @@ class CheckTests(unittest.TestCase):
         self.assertNotIn("name dropping", report)
         self.assertNotIn("vague authority", report)
 
+    def test_code_and_quotations_are_skipped_for_wording(self):
+        text = ("Run this:\n\n```js\nconst a = 1; let c = a -- b;\n```\n\n"
+                "Use `seamless-sync` here. The client wrote: \"We want a seamless app.\"")
+        report = "\n".join(checker.check(text))
+        self.assertNotIn("semicolons", report)
+        self.assertNotIn("dashes", report)
+        self.assertNotIn("seamless", report)
+        self.assertIn("skipped for wording checks: 1 code blocks, 1 inline code, 1 quotations", report)
+
+    def test_editable_prose_is_still_checked_next_to_code(self):
+        report = "\n".join(checker.check("We deliver seamless results. Run `npm test`."))
+        self.assertIn("seamless", report)
+
+    def test_words_inside_other_words_are_not_flagged(self):
+        report = "\n".join(checker.check("We reunlocked nothing and kept the seamlessness."))
+        self.assertNotIn("unlock", report)
+        report = "\n".join(checker.check("It unlocks reporting."))
+        self.assertIn("unlock", report)
+
     def test_plain_links_and_brackets_are_not_residue(self):
         report = "\n".join(checker.check("See [the docs](https://example.com/?page=2) for setup."))
         self.assertNotIn("placeholders", report)

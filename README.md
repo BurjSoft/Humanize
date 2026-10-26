@@ -76,7 +76,7 @@ python skills/humanize/scripts/compare.py original.md rewrite.md
 python skills/humanize/scripts/preview.py proposal.md --job job-post.txt
 ```
 
-`compare.py` lists facts from the original that are missing in the rewrite (numbers, versions, URLs, names, technologies, negations, qualifiers like "helped"), absolutes the rewrite added, and new terms to verify. It exits with code 1 when something is missing. It matches strings, not meaning. `preview.py` shows the first ~200 characters a client sees, flags greetings, self-introductions and restated job posts, and lists which job-post terms the opening uses.
+`compare.py` lists facts from the original that are missing in the rewrite (numbers, versions, URLs, names, technologies, negations, qualifiers like "helped"), absolutes the rewrite added, and new terms to verify. It exits with code 1 when something is missing. It matches strings, not meaning, so it cannot see swapped roles ("helped build the API and led the frontend" becoming "led the API and helped build the frontend"); a human or model read-through still has to. `preview.py` shows the first ~200 characters a client sees, flags greetings, self-introductions and restated job posts, and lists which job-post terms the opening uses. Matching terms is not the same as addressing the client's problem; that stays an editorial judgment. `check.py` skips fenced code, inline code and double-quoted text for wording checks.
 
 ## How it works
 

@@ -6,6 +6,10 @@ Usage: python check.py <file>    (or - to read stdin)
 Counts what a final read tends to miss. It flags and never rewrites, and it
 does not estimate whether a human or a model wrote the text. A hit is a prompt
 to look, not a verdict. Skip the rhythm numbers for text under ~80 words.
+
+Wording, punctuation and rhythm checks skip fenced code, inline code and
+double-quoted text, which the skill protects. Residue and Unicode checks still
+scan everything.
 """
 import re
 import statistics
@@ -63,9 +67,32 @@ def sentences(text):
     return [p.strip() for p in parts if len(p.split()) >= 2]
 
 
+PROTECTED = [("code blocks", re.compile(r"^```.*?^```[^\n]*$", re.S | re.M)),
+             ("inline code", re.compile(r"`[^`\n]+`")),
+             ("quotations", re.compile(r"\"[^\"\n]{1,300}\"|“[^”\n]{1,300}”"))]
+
+
+def editable_prose(text):
+    """Blank out protected spans, keeping line breaks so sentence splits still work."""
+    skipped = []
+    for label, pattern in PROTECTED:
+        spans = pattern.findall(text)
+        if spans:
+            skipped.append(f"{len(spans)} {label}")
+            text = pattern.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
+    return text, skipped
+
+
+def has_word(word, low):
+    # Match from the start of a word so inflections ("unlocks") still count.
+    return re.search(r"(?<![\w-])" + re.escape(word), low) is not None
+
+
 def check(text):
     # Word processors insert curly apostrophes; the phrase lists use straight ones.
     text = text.replace("’", "'").replace("‘", "'")
+    full = text
+    text, skipped = editable_prose(full)
     low = text.lower()
     out = []
 
@@ -75,24 +102,26 @@ def check(text):
 
     flag("em dashes / spaced en dashes", text.count("—") + len(re.findall(r" – | -- ", text)))
     flag("semicolons", text.count(";"))
-    flag("stock AI words", [w for w in STOCK if re.search(r"\b" + re.escape(w), low)])
-    flag("marketing words", [w for w in MARKETING if w in low])
-    flag("career cliches", [p for p in CAREER if p in low])
+    flag("stock AI words", [w for w in STOCK if has_word(w, low)])
+    flag("marketing words", [w for w in MARKETING if has_word(w, low)])
+    flag("career cliches", [p for p in CAREER if has_word(p, low)])
     flag("filler transitions", [t for t in TRANSITIONS
                                 if re.search(r"(^|[.!?]\s+|\n)" + t + r"\b", text)])
     flag("staging / pointing", [m.group(0).strip()[:50] for p in STAGING
                                 for m in re.finditer(p, text, re.I | re.M)])
-    flag("filler hedges", [h for h in HEDGES if h in low])
-    flag("inflated verbs / filler phrases", [w for w in INFLATED if re.search(r"\b" + w, low)])
+    flag("filler hedges", [h for h in HEDGES if has_word(h, low)])
+    flag("inflated verbs / filler phrases", [w for w in INFLATED if has_word(w, low)])
     flag("dressed-up verbs", [m.group(0) for m in DRESSED_UP.finditer(text)])
     flag("vague authority", [m.group(0) for m in VAGUE_AUTHORITY.finditer(text)])
     flag("name dropping", [m.group(0) for m in NAME_DROPPING.finditer(text)])
-    flag("unnecessary caveats", [c for c in CAVEATS if c in low])
-    flag("unfilled placeholders", PLACEHOLDER.findall(text))
-    flag("chat citation leaks", CITATION_LEAK.findall(text))
-    flag("AI referrer URL parameters", AI_REFERRER.findall(text))
+    flag("unnecessary caveats", [c for c in CAVEATS if has_word(c, low)])
+    flag("unfilled placeholders", PLACEHOLDER.findall(full))
+    flag("chat citation leaks", CITATION_LEAK.findall(full))
+    flag("AI referrer URL parameters", AI_REFERRER.findall(full))
     flag("bold-label starts", len(re.findall(r"^\s*[-*]?\s*\*\*[^*]{1,60}\*\*\s*[.:]?", text, re.M)))
     flag("exclamation marks", text.count("!"))
+    prose = text
+    text = full
     flag("invisible characters", len(INVISIBLE.findall(text)))
     flag("non-standard spaces", len(UNICODE_SPACES.findall(text)))
     unusual = Counter(INVISIBLE.findall(text) + UNICODE_SPACES.findall(text))
@@ -105,9 +134,9 @@ def check(text):
     if re.search(r"[A-Za-z]", text):
         flag("Cyrillic/Greek letters (check for look-alikes)", len(LOOKALIKE.findall(text)))
 
-    sents = sentences(text)
+    sents = sentences(prose)
     lens = [len(s.split()) for s in sents]
-    if len(text.split()) >= 80 and len(lens) >= 4:
+    if len(prose.split()) >= 80 and len(lens) >= 4:
         med = statistics.median(lens)
         band = sum(1 for n in lens if abs(n - med) <= 5) / len(lens)
         mean = statistics.mean(lens)
@@ -120,6 +149,8 @@ def check(text):
         share = sum(1 for w in starts if w in OPENERS) / len(starts)
         if share >= 0.4:
             out.append(f"openers: {share:.0%} of sentences start with The/It/This/That/You/I")
+    if skipped:
+        out.append(f"skipped for wording checks: {', '.join(skipped)}")
     out.append(f"words: {len(text.split())}")
     return out
 

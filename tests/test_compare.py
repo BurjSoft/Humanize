@@ -64,6 +64,12 @@ class CompareTests(unittest.TestCase):
                 self.assertTrue(missing)
                 self.assertIn("  " + fact, report)
 
+    def test_known_limit_swapped_ownership_is_not_detected(self):
+        # Documented limit: same tokens, reversed roles. The read-through has to catch this.
+        _, missing = compare.compare("I helped build the API and led the frontend.",
+                                     "I led the API and helped build the frontend.")
+        self.assertFalse(missing)
+
     def test_reports_dropped_v_prefixed_version(self):
         report, missing = compare.compare("Upgraded the SDK to v2.4.", "Upgraded the SDK.")
         self.assertTrue(missing)

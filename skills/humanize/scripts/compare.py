@@ -7,7 +7,9 @@ Lists facts that appear in the original but not in the rewrite (numbers,
 versions, dates, URLs, emails, technology and project names, quoted text,
 negations, qualifiers), and certainty words the rewrite added. It matches
 strings, not meaning: a fact that was reworded on purpose shows as missing,
-and a meaning change with the same tokens passes. Exit code 1 when anything
+and a meaning change with the same tokens passes. In particular it cannot see
+swapped roles ("helped build X and led Y" becoming "led X and helped build Y")
+or a fact that appears fewer times; it is a prompt for review, not a validator. Exit code 1 when anything
 is missing, so it can gate a script; read every item before acting on it.
 """
 import re
