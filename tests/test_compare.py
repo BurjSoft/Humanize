@@ -70,6 +70,27 @@ class CompareTests(unittest.TestCase):
                                      "I led the API and helped build the frontend.")
         self.assertFalse(missing)
 
+    def test_added_absolute_fails(self):
+        report, failed = compare.compare("I can help investigate the issue.",
+                                         "I guarantee I can investigate the issue.")
+        self.assertTrue(failed)
+        self.assertIn("'guarantee'", "\n".join(report))
+
+    def test_new_terms_fail_only_in_strict_mode(self):
+        original, rewrite = "I build React forms.", "I build React forms on AWS."
+        self.assertFalse(compare.compare(original, rewrite)[1])
+        self.assertTrue(compare.compare(original, rewrite, strict=True)[1])
+        with tempfile.TemporaryDirectory() as directory:
+            source, revised = Path(directory) / "a.txt", Path(directory) / "b.txt"
+            source.write_text(original, encoding="utf-8")
+            revised.write_text(rewrite, encoding="utf-8")
+            script = [sys.executable, str(SCRIPTS / "compare.py")]
+            plain = subprocess.run(script + [str(source), str(revised)], capture_output=True)
+            strict = subprocess.run(script + ["--strict", str(source), str(revised)],
+                                    capture_output=True)
+            self.assertEqual(plain.returncode, 0)
+            self.assertEqual(strict.returncode, 1)
+
     def test_reports_strengthened_certainty(self):
         report, missing = compare.compare("The cache could reduce retries.",
                                           "The cache will eliminate retries.")

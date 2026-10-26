@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Before/after fact check for the humanize skill. Python 3.10+, stdlib only.
 
-Usage: python compare.py <original> <rewrite>    (one of them may be - for stdin)
+Usage: python compare.py [--strict] <original> <rewrite>    (one of them may be - for stdin)
 
 Lists facts that appear in the original but not in the rewrite (numbers,
 versions, dates, URLs, emails, technology and project names, quoted text,
@@ -9,8 +9,12 @@ negations, qualifiers), and certainty words the rewrite added. It matches
 strings, not meaning: a fact that was reworded on purpose shows as missing,
 and a meaning change with the same tokens passes. In particular it cannot see
 swapped roles ("helped build X and led Y" becoming "led X and helped build Y")
-or a fact that appears fewer times; it is a prompt for review, not a validator. Exit code 1 when anything
-is missing, so it can gate a script; read every item before acting on it.
+or a fact that appears fewer times; it is a prompt for review, not a validator.
+
+Exit code 1 when a fact, negation or qualifier is missing or an absolute
+("guaranteed", "always") was added. With --strict, new terms in the rewrite
+also fail; they are off by default because rewording often introduces them.
+Read every item before acting on it.
 """
 import re
 import sys
@@ -74,13 +78,13 @@ def contains_fact(key, extracted, text):
     return re.search(r"(?<!\w)" + re.escape(value) + r"(?!\w)", text, re.I) is not None
 
 
-def compare(original, rewrite):
+def compare(original, rewrite, strict=False):
     original, rewrite = norm(original), norm(rewrite)
     out = []
     before, after = facts(original), facts(rewrite)
     missing = sorted(k for k in before
                      if not contains_fact(k, after, rewrite))
-    has_loss = bool(missing)
+    failed = bool(missing)
     if missing:
         out.append("missing from rewrite:")
         out.extend("  " + k for k in missing)
@@ -88,20 +92,22 @@ def compare(original, rewrite):
         b, a = words(original, vocab), words(rewrite, vocab)
         lost = sorted(w for w in vocab if a[w] < b[w])
         if lost:
-            has_loss = True
+            failed = True
             out.append(f"fewer {label} (check certainty and scope): {lost}")
     b, a = words(original, ABSOLUTES), words(rewrite, ABSOLUTES)
     gained = sorted(w for w in ABSOLUTES if a[w] > b[w])
     if gained:
+        failed = True
         out.append(f"absolutes added (check for overclaiming): {gained}")
     new = sorted(k for k in after
                  if not contains_fact(k, before, original))
     if new:
+        failed = failed or strict
         out.append("new in rewrite (confirm each is a verified fact):")
         out.extend("  " + k for k in new)
     if not out:
         out.append("no missing facts found by string match")
-    return out, has_loss
+    return out, failed
 
 
 def read(path):
@@ -118,11 +124,14 @@ def main():
     for stream in (sys.stdin, sys.stdout):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
-    if len(sys.argv) != 3 or sys.argv[1:] == ["-", "-"]:
-        sys.exit("usage: python compare.py <original> <rewrite>  (only one may be -)")
-    report, missing = compare(read(sys.argv[1]), read(sys.argv[2]))
+    args = sys.argv[1:]
+    strict = "--strict" in args
+    paths = [a for a in args if a != "--strict"]
+    if len(paths) != 2 or paths == ["-", "-"]:
+        sys.exit("usage: python compare.py [--strict] <original> <rewrite>  (only one may be -)")
+    report, failed = compare(read(paths[0]), read(paths[1]), strict)
     print("\n".join(report))
-    sys.exit(1 if missing else 0)
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":
