@@ -70,6 +70,16 @@ class CompareTests(unittest.TestCase):
                                      "I led the API and helped build the frontend.")
         self.assertFalse(missing)
 
+    def test_reports_dropped_name_at_sentence_start(self):
+        report, failed = compare.compare("Stripe handles payments. I led the API.", "I led the API.")
+        self.assertTrue(failed)
+        self.assertIn("  name: Stripe", report)
+
+    def test_common_sentence_openers_are_not_names(self):
+        _, failed = compare.compare("After launch we fixed the API. Today it is stable.",
+                                    "We fixed the API after launch and it is stable now.")
+        self.assertFalse(failed)
+
     def test_added_absolute_fails(self):
         report, failed = compare.compare("I can help investigate the issue.",
                                          "I guarantee I can investigate the issue.")
@@ -153,6 +163,17 @@ class PreviewTests(unittest.TestCase):
                                            "Need AI chatbot and UI work, QA too."))
         self.assertIn("'AI'", report)
         self.assertIn("'UI'", report)
+
+    def test_job_post_can_come_from_stdin(self):
+        with tempfile.TemporaryDirectory() as directory:
+            proposal = Path(directory) / "proposal.txt"
+            proposal.write_text("I build AI features.", encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "preview.py"), str(proposal), "--job", "-"],
+                input="Need AI chatbot work.", capture_output=True, encoding="utf-8",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("'AI'", result.stdout)
 
     def test_preview_runs_paragraphs_together(self):
         head = preview.preview("First paragraph.\r\n\r\nSecond paragraph.")[0]

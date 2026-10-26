@@ -20,13 +20,13 @@ import re
 import sys
 from collections import Counter
 
-NUMBER = re.compile(r"(?<![\w.])(?:[vV](?=\d))?[$£€]?\d[\d,]*(?:\.\d+)*(?:%|k|K|m|M|x|\+)?(?![\w])")
+NUMBER = re.compile(r"(?<![\w.])(?:[vV](?=\d))?[$\u00a3\u20ac]?\d[\d,]*(?:\.\d+)*(?:%|k|K|m|M|x|\+)?(?![\w])")
 URL = re.compile(r"https?://[^\s)>\]]+")
 EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b")
 # Words with internal capitals, dots or digits, or all caps: Node.js, PostgreSQL, AWS, S3, MotoMate123.
 TERM = re.compile(r"\b(?:[A-Za-z]+[.#+][A-Za-z0-9]+|[A-Z][a-z0-9]*[A-Z0-9][A-Za-z0-9]*|[A-Z]{2,}\d*)\b")
 CAPITALIZED = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.M)
-QUOTED = re.compile(r"\"([^\"\n]{3,80})\"|“([^”\n]{3,80})”")
+QUOTED = re.compile(r"\"([^\"\n]{3,80})\"|\u201c([^\u201d\n]{3,80})\u201d")
 NEGATIONS = ["not", "never", "no", "without", "don't", "didn't", "can't", "won't", "isn't",
              "wasn't", "haven't", "hasn't", "unconfirmed"]
 QUALIFIERS = ["helped", "assisted", "contributed", "co-led", "supported", "about",
@@ -39,10 +39,23 @@ ABSOLUTES = ["always", "never", "every", "all", "only", "guaranteed", "guarantee
 STOP_CAPS = {"The", "This", "That", "These", "Those", "And", "But", "For", "With", "When",
              "Where", "Then", "Our", "Your", "Their", "You", "She", "They", "What", "How",
              "Why", "Who", "Its", "His", "Her", "Also", "Each", "Any", "Some", "Most"}
+SENTENCE_START = re.compile(r"(?:^|(?<=[.!?:]\s))\s*([A-Z][a-z]{2,})\b", re.M)
+# Ordinary words that open sentences. Anything else capitalized there is treated as a
+# name ("Stripe handles payments."), so a dropped client or tool is still reported.
+COMMON_OPENERS = STOP_CAPS | {
+    "After", "Before", "During", "Since", "Until", "While", "Once", "Today", "Now", "Next",
+    "Later", "First", "Second", "Third", "Finally", "Last", "Here", "There", "Yes", "Not",
+    "All", "Both", "Many", "Several", "Every", "Few", "More", "Most", "Other", "Such", "One",
+    "Two", "Three", "Our", "Can", "Could", "Would", "Should", "Will", "Did", "Does", "Have",
+    "Has", "Had", "Was", "Were", "Are", "Use", "Run", "See", "Let", "Please", "Thanks",
+    "Thank", "Sorry", "Happy", "Glad", "Just", "Only", "Even", "Still", "However", "Instead",
+    "Otherwise", "Because", "Although", "Though", "Unless", "Whether", "Without", "From",
+    "Into", "About", "Over", "Under", "Between", "Through", "Within", "Across", "Along",
+    "Most", "Some", "Just", "Hello", "Dear", "Regards", "Best", "Note", "Hey"}
 
 
 def norm(text):
-    return text.replace("’", "'").replace("‘", "'").lstrip("﻿")
+    return text.replace("\u2019", "'").replace("\u2018", "'").lstrip("\ufeff")
 
 
 def facts(text):
@@ -59,6 +72,10 @@ def facts(text):
     for m in CAPITALIZED.finditer(no_urls):
         if m.group(0) not in STOP_CAPS:
             found["name: " + m.group(0)] += 1
+    for m in SENTENCE_START.finditer(no_urls):
+        word = m.group(1)
+        if word not in COMMON_OPENERS and "name: " + word not in found:
+            found["name: " + word] += 1
     for m in QUOTED.finditer(text):
         found["quote: " + (m.group(1) or m.group(2))] += 1
     return found

@@ -37,6 +37,15 @@ class ManifestTests(unittest.TestCase):
         for path in MANIFESTS:
             self.assertEqual(load(path)["name"], "humanize", path)
 
+    def test_descriptions_and_keywords_match(self):
+        marketplace = load(".claude-plugin/marketplace.json")
+        entry = next(p for p in marketplace["plugins"] if p["name"] == "humanize")
+        descriptions = {path: load(path)["description"] for path in MANIFESTS}
+        descriptions["marketplace entry"] = entry["description"]
+        self.assertEqual(len(set(descriptions.values())), 1, descriptions)
+        keywords = {path: tuple(load(path)["keywords"]) for path in MANIFESTS}
+        self.assertEqual(len(set(keywords.values())), 1, keywords)
+
     def test_codex_skills_path_resolves_from_plugin_root(self):
         skills = load(".codex-plugin/plugin.json")["skills"]
         self.assertTrue((ROOT / skills / "humanize/SKILL.md").is_file(), skills)

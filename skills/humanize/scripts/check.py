@@ -18,18 +18,23 @@ import unicodedata
 from collections import Counter
 
 STOCK = ["delve", "bolster", "illuminate", "elucidate", "underscore", "underpin",
-         "tapestry", "synergy", "beacon", "interplay", "intricate", "myriad",
+         "tapestry", "synergy", "beacon", "interplay", "intricate", "intricacies", "myriad",
          "plethora", "multifaceted", "holistic", "pivotal", "realm", "testament",
          "meticulous", "vibrant", "cutting-edge", "game-changing", "unparalleled",
          "unwavering", "ever-evolving", "commendable"]
+STOCK_PHRASES = ["shed light on", "grapple with", "navigate the complexities", "stands as a testament",
+                 "paving the way", "look no further", "that being said", "in the realm of",
+                 "in today's fast-paced world", "in an ever-changing landscape"]
 MARKETING = ["empower", "unlock", "elevate", "seamless", "streamline", "revolutioniz",
              "supercharge", "next-level", "best-in-class", "world-class",
-             "transformative", "game-changer", "harness the power"]
+             "transformative", "game-changer", "harness the power", "take it to the next level",
+             "we're thrilled", "excited to announce"]
 CAREER = ["passionate about", "perfect fit", "perfect candidate", "results-driven",
           "hit the ground running", "go above and beyond", "wear many hats",
           "i came across your", "i have carefully read", "i am confident that i can",
           "i'm excited to apply", "looking forward to hearing from you",
-          "feel free to reach out", "i hope this", "great question"]
+          "feel free to reach out", "i hope this", "great question", "detail-oriented",
+          "team player", "proven track record", "dear hiring manager"]
 TRANSITIONS = ["Additionally", "Furthermore", "Moreover", "Importantly", "Notably",
                "Ultimately", "In conclusion", "Lastly", "That said",
                "Needless to say", "In other words"]
@@ -41,8 +46,8 @@ STAGING = [r"here'?s (the thing|what|why)", r"let me be clear", r"let'?s (break|
 HEDGES = ["arguably", "it's worth noting", "it is worth noting", "it's important to note",
           "it is important to note", "could potentially"]
 OPENERS = {"the", "it", "it's", "this", "that", "that's", "these", "you", "i"}
-INVISIBLE = re.compile("[​‌‍⁠﻿]")
-LOOKALIKE = re.compile("[Ѐ-ӿͰ-Ͽ]")
+INVISIBLE = re.compile("[\u200b\u200c\u200d\u2060\ufeff]")
+LOOKALIKE = re.compile("[\u0400-\u04ff\u0370-\u03ff]")
 INFLATED = ["utilize", "facilitate", "commence", "endeavor", "ascertain", "in order to",
             "due to the fact that", "has the ability to", "at this point in time"]
 DRESSED_UP = re.compile(r"\b(serves|served|stands|stood|functions) as an?\b|\bboasts\b", re.I)
@@ -54,12 +59,12 @@ NAME_DROPPING = re.compile(r"\b(featured in|as seen (in|on)|trusted by (leading|
 CAVEATS = ["results may vary", "every project is different", "no solution is perfect",
            "it's important to remember", "it is important to remember"]
 PLACEHOLDER = re.compile(r"\[(?:your|insert|add|enter|describe|specify|client|company|name)[^\]]{0,40}\]"
-                         r"|\b\d{4}-XX-XX\b", re.I)
+                         r"(?!\()|\b\d{4}-XX-XX\b", re.I)
 CITATION_LEAK = re.compile(r"cite\s*turn\d+\w*|contentReference\[oaicite:\d+\]|oai_citation"
                            r"|\[attached_file:\d+\]")
 AI_REFERRER = re.compile(r"utm_source=(?:chatgpt\.com|openai|claude\.ai|perplexity\.ai|copilot\.com)",
                          re.I)
-UNICODE_SPACES =re.compile("[   -   　]")
+UNICODE_SPACES = re.compile("[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]")
 
 
 def sentences(text):
@@ -69,7 +74,8 @@ def sentences(text):
 
 PROTECTED = [("code blocks", re.compile(r"^```.*?^```[^\n]*$", re.S | re.M)),
              ("inline code", re.compile(r"`[^`\n]+`")),
-             ("quotations", re.compile(r"\"[^\"\n]{1,300}\"|“[^”\n]{1,300}”"))]
+             # An opening quote never follows a word character, so 5" (inches) is not one.
+             ("quotations", re.compile(r"(?<!\w)\"[^\"\n]{1,300}\"(?!\w)|\u201c[^\u201d\n]{1,300}\u201d"))]
 
 
 def editable_prose(text):
@@ -88,9 +94,21 @@ def has_word(word, low):
     return re.search(r"(?<![\w-])" + re.escape(word), low) is not None
 
 
+def stock_hits(text):
+    # A capitalized match mid-sentence is a name (the Realm database), not the stock word.
+    hits = []
+    for word in STOCK:
+        for m in re.finditer(r"(?<![\w-])" + re.escape(word), text, re.I):
+            sentence_start = re.search(r"(^|[.!?:]\s+|\n\s*)$", text[:m.start()]) is not None
+            if m.group(0)[0].islower() or sentence_start:
+                hits.append(word)
+                break
+    return hits
+
+
 def check(text):
     # Word processors insert curly apostrophes; the phrase lists use straight ones.
-    text = text.replace("’", "'").replace("‘", "'")
+    text = text.replace("\u2019", "'").replace("\u2018", "'")
     full = text
     text, skipped = editable_prose(full)
     low = text.lower()
@@ -100,9 +118,11 @@ def check(text):
         if hits:
             out.append(f"{label}: {hits}")
 
-    flag("em dashes / spaced en dashes", text.count("—") + len(re.findall(r" – | -- ", text)))
+    flag("em dashes / spaced en and hyphen dashes",
+         text.count("\u2014") + len(re.findall(r" \u2013 | -- |(?<=\S) - (?=\S)", text)))
     flag("semicolons", text.count(";"))
-    flag("stock AI words", [w for w in STOCK if has_word(w, low)])
+    flag("stock AI words", stock_hits(text))
+    flag("stock AI phrases", [p for p in STOCK_PHRASES if has_word(p, low)])
     flag("marketing words", [w for w in MARKETING if has_word(w, low)])
     flag("career cliches", [p for p in CAREER if has_word(p, low)])
     flag("filler transitions", [t for t in TRANSITIONS
@@ -168,7 +188,7 @@ def main():
         except OSError as e:
             sys.exit(f"cannot read {sys.argv[1]}: {e.strerror}")
     # A leading byte-order mark comes from the editor or shell, not the writing.
-    if text.startswith("﻿"):
+    if text.startswith("\ufeff"):
         text = text[1:]
     print("\n".join(check(text)))
 

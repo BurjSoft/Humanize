@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Upwork preview check for the humanize skill. Python 3.10+, stdlib only.
 
-Usage: python preview.py <proposal> [--job <job post file>]
+Usage: python preview.py <proposal> [--job <job post file>]    (one of them may be - for stdin)
 
 Shows the first ~200 characters, the part a client sees before clicking, and
 flags openings that waste it: greetings, self-introductions, restating the job
@@ -92,10 +92,14 @@ def main():
             stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Check an Upwork proposal's preview.")
     parser.add_argument("proposal", help="proposal file, or - for stdin")
-    parser.add_argument("--job", help="job post file to compare terms against")
+    parser.add_argument("--job", help="job post file to compare terms against, or - for stdin")
     args = parser.parse_args()
+    if args.proposal == "-" and args.job == "-":
+        parser.error("only one of the proposal and --job can be - (stdin)")
     text = sys.stdin.read() if args.proposal == "-" else read(args.proposal)
-    job = read(args.job) if args.job else None
+    job = None
+    if args.job:
+        job = sys.stdin.read() if args.job == "-" else read(args.job)
     print("\n".join(preview(text, job)))
 
 

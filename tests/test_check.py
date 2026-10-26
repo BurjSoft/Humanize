@@ -1,6 +1,7 @@
 """Regression checks for the optional pattern sweep, not writing quality."""
 import importlib.util
 from pathlib import Path
+import re
 import subprocess
 import sys
 import unittest
@@ -105,6 +106,52 @@ class CheckTests(unittest.TestCase):
         self.assertNotIn("unlock", report)
         report = "\n".join(checker.check("It unlocks reporting."))
         self.assertIn("unlock", report)
+
+    def test_checker_flags_every_term_in_the_tell_lists(self):
+        tells = (SCRIPT.parents[1] / "references/tells.md").read_text(encoding="utf-8")
+        sections = ["Stock AI vocabulary", "Marketing register", "Career-writing clich"]
+        missed = []
+        for name in sections:
+            # Skip the rest of the heading line, then read to the next heading.
+            body = tells.split("## " + name, 1)[1].split("\n", 1)[1].split("\n## ", 1)[0]
+            for line in body.strip().splitlines():
+                line = line.removeprefix("Phrases:").strip()
+                if not line:
+                    continue
+                for term in re.split(r",\s*|\s+/\s+", line):
+                    # "(figurative)" terms need judgment: "robust regression" is fine.
+                    if "(figurative)" in term:
+                        continue
+                    term = re.sub(r"\s*\([^)]*\)", "", term).strip()
+                    if not term:
+                        continue
+                    report = [l for l in checker.check(f"Note: {term} here.")
+                              if not l.startswith(("words:", "skipped"))]
+                    if not report:
+                        missed.append(term)
+        self.assertEqual(missed, [], "tells.md terms the checker never flags")
+
+    def test_spaced_hyphen_used_as_a_dash_is_flagged(self):
+        report = "\n".join(checker.check("I fixed it - then shipped."))
+        self.assertIn("dashes", report)
+        for fine in ("- a bullet item", "  - an indented bullet", "a well-known fix"):
+            with self.subTest(text=fine):
+                self.assertNotIn("dashes", "\n".join(checker.check(fine)))
+
+    def test_capitalized_tech_names_are_not_stock_words(self):
+        report = "\n".join(checker.check("We store offline data in Realm and sync it."))
+        self.assertNotIn("realm", report)
+        report = "\n".join(checker.check("This opens a new realm of possibility."))
+        self.assertIn("realm", report)
+
+    def test_markdown_link_text_is_not_a_placeholder(self):
+        report = "\n".join(checker.check("Open the [Client portal](https://example.com) to log in."))
+        self.assertNotIn("placeholders", report)
+        self.assertIn("placeholders", "\n".join(checker.check("Hi [Client Name], thanks.")))
+
+    def test_inch_marks_do_not_break_quote_protection(self):
+        report = "\n".join(checker.check('The 5" screen works. Then "delve" here.'))
+        self.assertNotIn("delve", report)
 
     def test_plain_links_and_brackets_are_not_residue(self):
         report = "\n".join(checker.check("See [the docs](https://example.com/?page=2) for setup."))
