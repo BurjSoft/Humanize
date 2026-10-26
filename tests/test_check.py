@@ -131,6 +131,23 @@ class CheckTests(unittest.TestCase):
                         missed.append(term)
         self.assertEqual(missed, [], "tells.md terms the checker never flags")
 
+    def test_checker_flags_every_sentence_start_tell(self):
+        # These sections list phrases that open a sentence, so test them in that position.
+        tells = (SCRIPT.parents[1] / "references/tells.md").read_text(encoding="utf-8")
+        missed = []
+        for name in ["Filler transitions", "Pause-and-point"]:
+            body = tells.split("## " + name, 1)[1].split("\n", 1)[1].split("\n## ", 1)[0]
+            line = body.strip().splitlines()[0].split(". Plain", 1)[0]
+            for term in re.split(r",\s*|\s+/\s+", line):
+                term = term.replace("...", "").strip().rstrip(".")
+                if not term:
+                    continue
+                report = [l for l in checker.check(f"Done. {term} we shipped it.")
+                          if not l.startswith(("words:", "skipped"))]
+                if not report:
+                    missed.append(term)
+        self.assertEqual(missed, [], "sentence-start tells the checker never flags")
+
     def test_spaced_hyphen_used_as_a_dash_is_flagged(self):
         report = "\n".join(checker.check("I fixed it - then shipped."))
         self.assertIn("dashes", report)

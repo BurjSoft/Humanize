@@ -70,10 +70,24 @@ class CompareTests(unittest.TestCase):
                                      "I led the API and helped build the frontend.")
         self.assertFalse(missing)
 
-    def test_reports_dropped_name_at_sentence_start(self):
-        report, failed = compare.compare("Stripe handles payments. I led the API.", "I led the API.")
-        self.assertTrue(failed)
+    def test_sentence_start_name_is_reported_and_fails_only_in_strict(self):
+        original, rewrite = "Stripe handles payments. I led the API.", "I led the API."
+        report, failed = compare.compare(original, rewrite)
+        self.assertFalse(failed)
         self.assertIn("  name: Stripe", report)
+        self.assertTrue(compare.compare(original, rewrite, strict=True)[1])
+
+    def test_name_confirmed_elsewhere_fails_when_dropped(self):
+        # Capitalized mid-sentence too, so it is a confirmed name.
+        report, failed = compare.compare("Stripe handles payments. I set up Stripe webhooks.",
+                                         "I set up payment webhooks.")
+        self.assertTrue(failed)
+        self.assertIn("missing from rewrite:", report)
+
+    def test_changed_sentence_openers_do_not_fail(self):
+        _, failed = compare.compare("Weekly reports go out every Monday. Deployment happens on Friday.",
+                                    "We send reports every Monday and deploy on Friday.")
+        self.assertFalse(failed)
 
     def test_common_sentence_openers_are_not_names(self):
         _, failed = compare.compare("After launch we fixed the API. Today it is stable.",

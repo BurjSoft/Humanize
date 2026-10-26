@@ -37,12 +37,13 @@ CAREER = ["passionate about", "perfect fit", "perfect candidate", "results-drive
           "team player", "proven track record", "dear hiring manager"]
 TRANSITIONS = ["Additionally", "Furthermore", "Moreover", "Importantly", "Notably",
                "Ultimately", "In conclusion", "Lastly", "That said",
-               "Needless to say", "In other words"]
+               "Needless to say", "In other words", "At the end of the day", "As we can see"]
 STAGING = [r"here'?s (the thing|what|why)", r"let me be clear", r"let'?s (break|dive)",
            r"the (best part|secret)\s*:", r"\bthe truth is\b", r"\bnot just\b[^.]{1,60}\bbut\b",
            r"it'?s not [^.]{1,40}[,.;] it'?s", r"this means that", r"as you can see",
            r"notice how", r"the bottom line", r"key takeaway", r"what do you think\?",
-           r", (highlighting|underscoring|reflecting|showcasing) "]
+           r", (highlighting|underscoring|reflecting|showcasing) ", r"\bwhat nobody tells you\b",
+           r"\bin the interest of full disclosure\b", r"\bto be fair\b", r"\bone honest caveat\b"]
 HEDGES = ["arguably", "it's worth noting", "it is worth noting", "it's important to note",
           "it is important to note", "could potentially"]
 OPENERS = {"the", "it", "it's", "this", "that", "that's", "these", "you", "i"}

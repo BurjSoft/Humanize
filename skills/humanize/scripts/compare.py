@@ -12,8 +12,10 @@ swapped roles ("helped build X and led Y" becoming "led X and helped build Y")
 or a fact that appears fewer times; it is a prompt for review, not a validator.
 
 Exit code 1 when a fact, negation or qualifier is missing or an absolute
-("guaranteed", "always") was added. With --strict, new terms in the rewrite
-also fail; they are off by default because rewording often introduces them.
+("guaranteed", "always") was added. A capitalized word seen only at a sentence
+start is reported as a possible name to confirm, not a failure, because
+rewrites change openers constantly. With --strict, possible names and new terms
+in the rewrite also fail.
 Read every item before acting on it.
 """
 import re
@@ -45,13 +47,13 @@ SENTENCE_START = re.compile(r"(?:^|(?<=[.!?:]\s))\s*([A-Z][a-z]{2,})\b", re.M)
 COMMON_OPENERS = STOP_CAPS | {
     "After", "Before", "During", "Since", "Until", "While", "Once", "Today", "Now", "Next",
     "Later", "First", "Second", "Third", "Finally", "Last", "Here", "There", "Yes", "Not",
-    "All", "Both", "Many", "Several", "Every", "Few", "More", "Most", "Other", "Such", "One",
-    "Two", "Three", "Our", "Can", "Could", "Would", "Should", "Will", "Did", "Does", "Have",
+    "All", "Both", "Many", "Several", "Every", "Few", "More", "Other", "Such", "One",
+    "Two", "Three", "Can", "Could", "Would", "Should", "Will", "Did", "Does", "Have",
     "Has", "Had", "Was", "Were", "Are", "Use", "Run", "See", "Let", "Please", "Thanks",
     "Thank", "Sorry", "Happy", "Glad", "Just", "Only", "Even", "Still", "However", "Instead",
     "Otherwise", "Because", "Although", "Though", "Unless", "Whether", "Without", "From",
     "Into", "About", "Over", "Under", "Between", "Through", "Within", "Across", "Along",
-    "Most", "Some", "Just", "Hello", "Dear", "Regards", "Best", "Note", "Hey"}
+    "Hello", "Dear", "Regards", "Best", "Note", "Hey"}
 
 
 def norm(text):
@@ -72,10 +74,14 @@ def facts(text):
     for m in CAPITALIZED.finditer(no_urls):
         if m.group(0) not in STOP_CAPS:
             found["name: " + m.group(0)] += 1
+    # A capitalized word seen only at a sentence start may be a name ("Stripe handles
+    # payments.") or just an opener ("Deployment happens on Friday."), so it is kept
+    # apart and only fails the run in --strict mode.
     for m in SENTENCE_START.finditer(no_urls):
         word = m.group(1)
-        if word not in COMMON_OPENERS and "name: " + word not in found:
-            found["name: " + word] += 1
+        if word not in COMMON_OPENERS and "name: " + word not in found \
+                and "term: " + word not in found:
+            found["possible name: " + word] += 1
     for m in QUOTED.finditer(text):
         found["quote: " + (m.group(1) or m.group(2))] += 1
     return found
@@ -99,12 +105,17 @@ def compare(original, rewrite, strict=False):
     original, rewrite = norm(original), norm(rewrite)
     out = []
     before, after = facts(original), facts(rewrite)
-    missing = sorted(k for k in before
-                     if not contains_fact(k, after, rewrite))
-    failed = bool(missing)
+    absent = sorted(k for k in before
+                    if not contains_fact(k, after, rewrite))
+    missing = [k for k in absent if not k.startswith("possible name: ")]
+    possible = [k for k in absent if k.startswith("possible name: ")]
+    failed = bool(missing) or (strict and bool(possible))
     if missing:
         out.append("missing from rewrite:")
         out.extend("  " + k for k in missing)
+    if possible:
+        out.append("possible names missing (sentence-start words; confirm, fails only with --strict):")
+        out.extend("  " + k.removeprefix("possible ") for k in possible)
     for label, vocab in (("negations", NEGATIONS), ("qualifiers", QUALIFIERS)):
         b, a = words(original, vocab), words(rewrite, vocab)
         lost = sorted(w for w in vocab if a[w] < b[w])
@@ -116,8 +127,9 @@ def compare(original, rewrite, strict=False):
     if gained:
         failed = True
         out.append(f"absolutes added (check for overclaiming): {gained}")
+    # New sentence openers are routine in a rewrite, so they are not listed as new facts.
     new = sorted(k for k in after
-                 if not contains_fact(k, before, original))
+                 if not k.startswith("possible name: ") and not contains_fact(k, before, original))
     if new:
         failed = failed or strict
         out.append("new in rewrite (confirm each is a verified fact):")
