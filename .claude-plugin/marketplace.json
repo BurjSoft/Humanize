@@ -1,0 +1,12 @@
+{
+  "name": "humanize",
+  "owner": { "name": "Hamza Shahzad" },
+  "plugins": [
+    {
+      "name": "humanize",
+      "source": "./",
+      "description": "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose.",
+      "version": "1.0.0"
+    }
+  ]
+}

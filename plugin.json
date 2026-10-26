@@ -1,0 +1,31 @@
+{
+    "$schema":  "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    "name":  "humanize",
+    "version":  "1.0.0",
+    "description":  "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose.",
+    "author":  {
+                   "name":  "Hamza Shahzad"
+               },
+    "license":  "MIT",
+    "keywords":  [
+                     "writing",
+                     "humanize",
+                     "proposals",
+                     "resume"
+                 ],
+    "extensions":  {
+                       "com.openai":  {
+                                          "interface":  {
+                                                            "capabilities":  [
+
+                                                                             ],
+                                                            "category":  "Productivity",
+                                                            "defaultPrompt":  "Humanize this text while preserving every verifiable fact.",
+                                                            "developerName":  "Hamza Shahzad",
+                                                            "displayName":  "Humanize",
+                                                            "longDescription":  "Rewrite proposals, resumes, cover letters, screening answers and other prose into clear personal writing, keeping every fact intact.",
+                                                            "shortDescription":  "Natural, factual writing"
+                                                        }
+                                      }
+                   }
+}
