@@ -105,8 +105,11 @@ def compare(original, rewrite):
 def read(path):
     if path == "-":
         return sys.stdin.read()
-    with open(path, encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except OSError as e:
+        sys.exit(f"cannot read {path}: {e.strerror}")
 
 
 def main():

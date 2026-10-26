@@ -1,6 +1,6 @@
 {
   "name": "humanize",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose.",
   "author": { "name": "Hamza Shahzad" },
   "license": "MIT",

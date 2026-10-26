@@ -131,8 +131,11 @@ def main():
     if len(sys.argv) < 2 or sys.argv[1] == "-":
         text = sys.stdin.read()
     else:
-        with open(sys.argv[1], encoding="utf-8") as f:
-            text = f.read()
+        try:
+            with open(sys.argv[1], encoding="utf-8") as f:
+                text = f.read()
+        except OSError as e:
+            sys.exit(f"cannot read {sys.argv[1]}: {e.strerror}")
     # A leading byte-order mark comes from the editor or shell, not the writing.
     if text.startswith("﻿"):
         text = text[1:]

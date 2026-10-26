@@ -53,8 +53,10 @@ def job_terms(job):
 
 def preview(proposal, job=None):
     proposal = norm(proposal).strip()
-    head = proposal[:PREVIEW_CHARS]
-    if len(proposal) > PREVIEW_CHARS and " " in head:
+    # Upwork's preview runs paragraphs together, so collapse line breaks before cutting.
+    flat = re.sub(r"\s+", " ", proposal)
+    head = flat[:PREVIEW_CHARS]
+    if len(flat) > PREVIEW_CHARS and " " in head:
         head = head.rsplit(" ", 1)[0]
     out = [f"preview ({len(head)} chars): {head}"]
     low = head.lower()
@@ -76,6 +78,14 @@ def preview(proposal, job=None):
     return out
 
 
+def read(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except OSError as e:
+        sys.exit(f"cannot read {path}: {e.strerror}")
+
+
 def main():
     for stream in (sys.stdin, sys.stdout):
         if hasattr(stream, "reconfigure"):
@@ -84,15 +94,8 @@ def main():
     parser.add_argument("proposal", help="proposal file, or - for stdin")
     parser.add_argument("--job", help="job post file to compare terms against")
     args = parser.parse_args()
-    if args.proposal == "-":
-        text = sys.stdin.read()
-    else:
-        with open(args.proposal, encoding="utf-8") as f:
-            text = f.read()
-    job = None
-    if args.job:
-        with open(args.job, encoding="utf-8") as f:
-            job = f.read()
+    text = sys.stdin.read() if args.proposal == "-" else read(args.proposal)
+    job = read(args.job) if args.job else None
     print("\n".join(preview(text, job)))
 
 

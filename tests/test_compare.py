@@ -121,6 +121,21 @@ class PreviewTests(unittest.TestCase):
         self.assertIn("'AI'", report)
         self.assertIn("'UI'", report)
 
+    def test_preview_runs_paragraphs_together(self):
+        head = preview.preview("First paragraph.\r\n\r\nSecond paragraph.")[0]
+        self.assertTrue(head.endswith("First paragraph. Second paragraph."))
+
+    def test_missing_files_exit_cleanly(self):
+        missing = str(SCRIPTS / "no-such-file.txt")
+        for args in (["check.py", missing], ["compare.py", missing, missing],
+                     ["preview.py", missing]):
+            with self.subTest(script=args[0]):
+                result = subprocess.run([sys.executable, str(SCRIPTS / args[0])] + args[1:],
+                                        capture_output=True, encoding="utf-8")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("cannot read", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
     def test_preview_is_cut_at_a_word_boundary(self):
         text = "word " * 100
         head = preview.preview(text)[0]
