@@ -7,7 +7,7 @@ Everything needed for the writing workflow is included in this repository. It ne
 ## Package layout
 
 ```text
-humanize/
+Humanize/
   plugin.json                     Portable Agent Plugins 1.0 manifest
   .codex-plugin/plugin.json       Codex compatibility manifest
   .claude-plugin/plugin.json      Claude Code manifest
@@ -19,12 +19,12 @@ humanize/
 
 ## Install from GitHub
 
-Replace `OWNER/REPO` with the actual GitHub owner and repository name after publishing. The repository can have any name; the plugin and marketplace names remain `humanize`.
+The plugin and marketplace names are both `humanize`.
 
 ### Claude Code
 
 ```text
-/plugin marketplace add OWNER/REPO
+/plugin marketplace add BurjSoft/Humanize
 /plugin install humanize@humanize
 ```
 
@@ -35,6 +35,8 @@ Alternatively, copy the complete `skills/humanize` directory to your host's pers
 Install the repository using your host's supported plugin installation flow, or copy the complete `skills/humanize` directory into its configured skills directory. Keep `SKILL.md` inside the `humanize` directory. The personal skills directory depends on the host and its configuration; no absolute machine path is required by this package.
 
 The root `plugin.json` is the portable manifest. The hidden `.codex-plugin` and `.claude-plugin` directories are compatibility metadata; include them when uploading or cloning this repository. Host support and installation commands vary, so check your host's documentation.
+
+When changing the version or description, update all four manifests together: `plugin.json`, `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and the plugin entry in `.claude-plugin/marketplace.json`.
 
 ### Make it mandatory
 

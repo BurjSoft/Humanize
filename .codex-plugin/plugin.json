@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose.",
   "author": { "name": "Hamza Shahzad" },
+  "license": "MIT",
   "interface": {
     "capabilities": [],
     "category": "Productivity",

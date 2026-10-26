@@ -1,7 +1,7 @@
 {
   "name": "humanize",
   "version": "1.0.0",
-  "description": "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose. Removes AI-sounding patterns without inventing facts.",
+  "description": "Natural, factual rewriting for proposals, resumes, cover letters, screening answers and general prose.",
   "author": { "name": "Hamza Shahzad" },
   "license": "MIT",
   "keywords": ["writing", "humanize", "proposals", "resume", "upwork"]
