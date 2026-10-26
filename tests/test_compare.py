@@ -1,0 +1,125 @@
+"""Regression checks for the before/after fact check and the Upwork preview check."""
+import importlib.util
+from pathlib import Path
+import unittest
+import subprocess
+import sys
+import tempfile
+
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "skills/humanize/scripts"
+
+
+def load(name):
+    spec = importlib.util.spec_from_file_location("humanize_" + name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+compare = load("compare")
+preview = load("preview")
+
+
+class CompareTests(unittest.TestCase):
+    ORIGINAL = ("I helped build the Angular 18 upgrade for MotoMate123, a CRM used by more than "
+                "400 dealerships. I have not used Pinecone. See https://example.com/case.")
+
+    def test_identical_text_passes(self):
+        report, missing = compare.compare(self.ORIGINAL, self.ORIGINAL)
+        self.assertFalse(missing)
+        self.assertIn("no missing facts", report[0])
+
+    def test_reports_dropped_facts_and_weakened_certainty(self):
+        rewrite = ("I built the Angular upgrade for MotoMate123, a CRM used by all 400 dealerships. "
+                   "I have used Pinecone extensively with AWS Lambda.")
+        report, missing = compare.compare(self.ORIGINAL, rewrite)
+        text = "\n".join(report)
+        self.assertTrue(missing)
+        self.assertIn("number: 18", text)
+        self.assertIn("url: https://example.com/case", text)
+        self.assertIn("'not'", text)
+        self.assertIn("'helped'", text)
+        self.assertIn("'more than'", text)
+        self.assertIn("'all'", text)
+        self.assertIn("term: AWS", text)
+        self.assertIn("name: Lambda", text)
+
+    def test_moved_facts_are_not_missing(self):
+        rewrite = ("See https://example.com/case. MotoMate123 is a CRM used by more than 400 "
+                   "dealerships, and I helped build its Angular 18 upgrade. I have not used Pinecone.")
+        _, missing = compare.compare(self.ORIGINAL, rewrite)
+        self.assertFalse(missing)
+
+    def test_changed_values_do_not_pass_as_substrings(self):
+        cases = [
+            ("Processed 18 requests.", "Processed 180 requests.", "number: 18"),
+            ("I use React.", "I use Reactive.", "name: React"),
+            ("See https://example.com/case", "See https://example.com/case-study",
+             "url: https://example.com/case"),
+        ]
+        for original, rewrite, fact in cases:
+            with self.subTest(fact=fact):
+                report, missing = compare.compare(original, rewrite)
+                self.assertTrue(missing)
+                self.assertIn("  " + fact, report)
+
+    def test_number_formatting_and_moved_name_are_preserved(self):
+        _, missing = compare.compare("I use React for 1,000 forms.",
+                                     "React powers 1000 forms.")
+        self.assertFalse(missing)
+
+    def test_new_shorter_value_is_reported(self):
+        report, _ = compare.compare("Processed 180 requests.", "Processed 18 requests.")
+        self.assertIn("  number: 18", report)
+
+    def test_cli_fails_for_lost_negation_or_qualifier(self):
+        for original, rewrite, lost in [
+            ("I have not used React.", "I have used React.", "negations"),
+            ("I helped build React forms.", "I built React forms.", "qualifiers"),
+        ]:
+            with self.subTest(lost=lost), tempfile.TemporaryDirectory() as directory:
+                source = Path(directory) / "original.txt"
+                revised = Path(directory) / "rewrite.txt"
+                source.write_text(original, encoding="utf-8")
+                revised.write_text(rewrite, encoding="utf-8")
+                result = subprocess.run(
+                    [sys.executable, str(SCRIPTS / "compare.py"), str(source), str(revised)],
+                    capture_output=True, encoding="utf-8",
+                )
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn("fewer " + lost, result.stdout)
+
+
+class PreviewTests(unittest.TestCase):
+    JOB = "About 70% of tickets are repeat questions. We want pgvector RAG with human handoff."
+
+    def test_flags_generic_opening(self):
+        text = ("Hi there! My name is Hamza and I am a developer with 8 years of experience. "
+                "I have read your job post and you are looking for a RAG assistant.")
+        report = "\n".join(preview.preview(text, self.JOB))
+        for label in ("greeting", "self-introduction", "years-of-experience opener",
+                      "says they read the post", "restates the job post"):
+            self.assertIn(label, report)
+
+    def test_specific_opening_has_no_tells_and_matches_job_terms(self):
+        text = ("If 70% of your tickets are already answered in the help docs, the assistant "
+                "mostly needs to find the right article. I'd build the handoff path first.")
+        report = "\n".join(preview.preview(text, self.JOB))
+        self.assertNotIn("opening tells", report)
+        self.assertIn("70%", report)
+        self.assertIn("handoff", report)
+
+    def test_preview_is_cut_at_a_word_boundary(self):
+        text = "word " * 100
+        head = preview.preview(text)[0]
+        self.assertLessEqual(len(head.split(": ", 1)[1]), preview.PREVIEW_CHARS)
+        self.assertTrue(head.endswith("word"))
+
+    def test_flags_wall_of_text(self):
+        report = "\n".join(preview.preview("token " * 90))
+        self.assertIn("long paragraph", report)
+
+
+if __name__ == "__main__":
+    unittest.main()

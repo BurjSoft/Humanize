@@ -15,6 +15,9 @@ Humanize/
   skills/humanize/SKILL.md         Shared writing instructions
   skills/humanize/references/      Tell lists used by the scan and sweep
   skills/humanize/scripts/check.py Optional stdlib-only pattern sweep
+  skills/humanize/scripts/compare.py Optional before/after fact check
+  skills/humanize/scripts/preview.py Optional Upwork preview check
+  tests/                          Script and manifest tests (python -m unittest)
   AGENTS.md                       Optional mandatory-use rule
   LICENSE
 ```
@@ -63,6 +66,15 @@ The optional sweep counts dashes, semicolons, stock vocabulary, career clichés,
 ```text
 python skills/humanize/scripts/check.py draft.md
 ```
+
+Two more optional checks, also Python 3.8+ with no dependencies:
+
+```text
+python skills/humanize/scripts/compare.py original.md rewrite.md
+python skills/humanize/scripts/preview.py proposal.md --job job-post.txt
+```
+
+`compare.py` lists facts from the original that are missing in the rewrite (numbers, versions, URLs, names, technologies, negations, qualifiers like "helped"), absolutes the rewrite added, and new terms to verify. It exits with code 1 when something is missing. It matches strings, not meaning. `preview.py` shows the first ~200 characters a client sees, flags greetings, self-introductions and restated job posts, and lists which job-post terms the opening uses.
 
 ## How it works
 
